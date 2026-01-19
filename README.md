@@ -1,0 +1,267 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Volume2, Check, X, RotateCcw, Play, Sparkles, BookOpen } from 'lucide-react';
+
+const vocabularyList = [
+  { id: 1, word: "have", meaning: "持っている", sentence: "We don’t have any tools, but we can fix it.", sentenceMeaning: "私たちは道具を何も持っていませんが、それを直すことができます。" },
+  { id: 2, word: "can", meaning: "できる", sentence: "You and I can do it!", sentenceMeaning: "あなたと私ならそれができます！" },
+  { id: 3, word: "make", meaning: "作る", sentence: "Mina makes a bowl of soup.", sentenceMeaning: "ミナはスープを一杯作ります。" },
+  { id: 4, word: "play", meaning: "遊ぶ", sentence: "Many children play there.", sentenceMeaning: "多くの子供たちがそこで遊びます。" },
+  { id: 5, word: "help", meaning: "助ける", sentence: "You always help me.", sentenceMeaning: "あなたはいつも私を助けてくれます。" }
+];
+
+export default function App() {
+  // 状態管理
+  // queue: 学習すべきカードのIDリスト
+  const [queue, setQueue] = useState(() => vocabularyList.map(v => v.id));
+  const [currentCardId, setCurrentCardId] = useState(vocabularyList[0].id);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+  const [streak, setStreak] = useState(0); // 連続正解数で演出
+  const [voices, setVoices] = useState([]);
+
+  // 現在のカードデータ取得
+  const currentCard = vocabularyList.find(v => v.id === currentCardId);
+
+  // 音声のロード（ブラウザのSpeech API）
+  useEffect(() => {
+    const loadVoices = () => {
+      const availVoices = window.speechSynthesis.getVoices();
+      setVoices(availVoices);
+    };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
+
+  // 音声再生関数
+  const playAudio = useCallback((text) => {
+    // ブラウザの読み上げ機能をキャンセル（連打防止）
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US'; // 英語設定
+    utterance.rate = 0.9; // 少しゆっくりめで聞き取りやすく
+
+    // 英語の音声を探して設定 (Google US Englishなどを優先)
+    const englishVoice = voices.find(voice => 
+      voice.name.includes('Google US English') || 
+      (voice.lang === 'en-US' && voice.name.includes('Samantha'))
+    ) || voices.find(voice => voice.lang.startsWith('en'));
+
+    if (englishVoice) {
+      utterance.voice = englishVoice;
+    }
+
+    window.speechSynthesis.speak(utterance);
+  }, [voices]);
+
+  // カードを裏返す
+  const handleFlip = () => {
+    setIsFlipped(!isFlipped);
+    // 自動再生は削除し、ユーザーがボタンを押したときのみ再生するように変更しました
+  };
+
+  // 「○ 覚えた」処理
+  const handleCorrect = (e) => {
+    e.stopPropagation();
+    setStreak(s => s + 1);
+    
+    // 現在のカードをキューから削除
+    const newQueue = queue.slice(1);
+    
+    if (newQueue.length === 0) {
+      setIsFinished(true);
+    } else {
+      transitionToNextCard(newQueue);
+    }
+  };
+
+  // 「× まだ」処理
+  const handleIncorrect = (e) => {
+    e.stopPropagation();
+    setStreak(0); // ストリークリセット
+
+    // 現在のカードをキューの最後に回す
+    const newQueue = [...queue.slice(1), currentCardId];
+    transitionToNextCard(newQueue);
+  };
+
+  // 次のカードへ遷移する際のアニメーション処理
+  const transitionToNextCard = (newQueue) => {
+    setIsFlipped(false);
+    setQueue(newQueue);
+    setTimeout(() => {
+      setCurrentCardId(newQueue[0]);
+    }, 200); // カードが表に戻るのを少し待つ
+  };
+
+  // リトライ（最初から）
+  const handleReset = () => {
+    setQueue(vocabularyList.map(v => v.id));
+    setCurrentCardId(vocabularyList[0].id);
+    setIsFinished(false);
+    setIsFlipped(false);
+    setStreak(0);
+  };
+
+  // 完了画面
+  if (isFinished) {
+    return (
+      <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4 font-sans text-slate-700">
+        <div className="bg-white w-full max-w-md p-8 rounded-3xl shadow-xl text-center space-y-6 border-4 border-indigo-100">
+          <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+            <Sparkles className="w-12 h-12 text-yellow-500" />
+          </div>
+          <h2 className="text-3xl font-bold text-indigo-600">Congratulations!</h2>
+          <p className="text-lg text-slate-500">すべての単語をマスターしました！</p>
+          <button 
+            onClick={handleReset}
+            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-lg shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="w-5 h-5" />
+            もう一度学習する
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 学習画面
+  return (
+    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 font-sans text-slate-700">
+      
+      {/* ヘッダー部分 */}
+      <div className="w-full max-w-md flex justify-between items-center mb-6 px-2">
+        <div className="flex items-center gap-2 text-slate-500 font-bold">
+          <BookOpen className="w-5 h-5" />
+          <span>Word Master</span>
+        </div>
+        <div className="bg-white px-4 py-1 rounded-full text-indigo-600 font-bold shadow-sm border border-indigo-100 text-sm">
+          残り: {queue.length}問
+        </div>
+      </div>
+
+      {/* カードエリア */}
+      <div className="relative w-full max-w-md h-96 perspective-1000 group">
+        <div 
+          className={`relative w-full h-full duration-500 preserve-3d cursor-pointer transition-transform ${isFlipped ? 'rotate-y-180' : ''}`}
+          onClick={handleFlip}
+        >
+          {/* 表面 (英語) */}
+          <div className="absolute w-full h-full backface-hidden bg-white rounded-3xl shadow-xl border-b-8 border-indigo-100 flex flex-col items-center justify-center p-8">
+            <span className="text-sm text-slate-400 font-bold tracking-widest uppercase mb-4">English</span>
+            <h1 className="text-6xl font-bold text-slate-800 mb-8">{currentCard.word}</h1>
+            <p className="text-slate-400 text-sm animate-pulse">タップして答えを見る</p>
+          </div>
+
+          {/* 裏面 (日本語・例文) */}
+          <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-indigo-600 rounded-3xl shadow-xl border-b-8 border-indigo-800 flex flex-col items-center justify-center p-6 text-white">
+            
+            <div className="text-center w-full">
+              {/* 単語エリア + 音声ボタン */}
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <h2 className="text-4xl font-bold">{currentCard.word}</h2>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    playAudio(currentCard.word);
+                  }}
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors flex-shrink-0"
+                  aria-label="単語を再生"
+                >
+                  <Volume2 className="w-5 h-5 text-white" />
+                </button>
+              </div>
+
+              <p className="text-2xl font-bold text-indigo-200 mb-6 border-b border-indigo-500 pb-2 inline-block">
+                {currentCard.meaning}
+              </p>
+              
+              {/* 例文エリア + 音声ボタン */}
+              <div className="bg-white/10 rounded-xl p-4 text-left w-full backdrop-blur-sm">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-xs text-indigo-200 uppercase font-bold">Example</p>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playAudio(currentCard.sentence);
+                    }}
+                    className="p-1.5 bg-white/20 hover:bg-white/30 rounded-full transition-colors flex-shrink-0"
+                    aria-label="例文を再生"
+                  >
+                    <Volume2 className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+                <p className="text-lg leading-relaxed font-medium mb-2">
+                  {currentCard.sentence}
+                </p>
+                <p className="text-sm text-indigo-200 border-t border-indigo-400/30 pt-2 mt-1">
+                  {currentCard.sentenceMeaning}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 操作ボタンエリア */}
+      <div className="w-full max-w-md mt-8 h-24 flex items-center justify-center gap-6">
+        {!isFlipped ? (
+          <button 
+            onClick={handleFlip}
+            className="w-full max-w-xs bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="w-5 h-5" />
+            答えを確認する
+          </button>
+        ) : (
+          <>
+            {/* バツボタン */}
+            <button 
+              onClick={handleIncorrect}
+              className="flex-1 flex flex-col items-center justify-center gap-1 group"
+            >
+              <div className="w-full h-16 bg-red-100 rounded-2xl flex items-center justify-center shadow-md border-b-4 border-red-200 group-active:border-b-0 group-active:translate-y-1 transition-all">
+                <X className="w-8 h-8 text-red-500" />
+              </div>
+              <span className="text-xs font-bold text-red-400">まだ...</span>
+            </button>
+
+            {/* マルボタン */}
+            <button 
+              onClick={handleCorrect}
+              className="flex-1 flex flex-col items-center justify-center gap-1 group"
+            >
+              <div className="w-full h-16 bg-emerald-100 rounded-2xl flex items-center justify-center shadow-md border-b-4 border-emerald-200 group-active:border-b-0 group-active:translate-y-1 transition-all">
+                <Check className="w-8 h-8 text-emerald-500" />
+              </div>
+              <span className="text-xs font-bold text-emerald-500">覚えた！</span>
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* ストリーク（連続正解）表示 */}
+      {streak > 1 && (
+        <div className="fixed top-20 right-4 bg-yellow-400 text-yellow-900 font-bold px-4 py-2 rounded-full shadow-lg animate-bounce text-sm flex items-center gap-1 z-10">
+          <Sparkles className="w-4 h-4" />
+          {streak} 連続正解！
+        </div>
+      )}
+
+      <style>{`
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+        .preserve-3d {
+          transform-style: preserve-3d;
+        }
+        .backface-hidden {
+          backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+          transform: rotateY(180deg);
+        }
+      `}</style>
+    </div>
+  );
+}
