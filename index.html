@@ -1,0 +1,285 @@
+import React, { useState, useEffect } from 'react';
+import { Volume2, ChevronLeft, ChevronRight, Shuffle, RotateCcw, BookOpen } from 'lucide-react';
+
+const vocabularyData = [
+  // Words
+  { id: 1, en: "have", jp: "持っている", ex: "We don’t have any tools, but we can fix it." },
+  { id: 2, en: "can", jp: "できる", ex: "You and I can do it!" },
+  { id: 3, en: "make", jp: "作る", ex: "Mina makes a bowl of soup." },
+  { id: 4, en: "play", jp: "遊ぶ", ex: "Many children play there." },
+  { id: 5, en: "help", jp: "助ける", ex: "You always help me." },
+  { id: 6, en: "smile", jp: "微笑む", ex: "She smiles." },
+  { id: 7, en: "sit", jp: "座る", ex: "Mina sits quietly." },
+  { id: 8, en: "together", jp: "一緒に", ex: "They look at the toy together." },
+  { id: 9, en: "shop", jp: "店", ex: "They visit a toy shop." },
+  { id: 10, en: "man", jp: "男の人", ex: "The man looks at the robot and says..." },
+  { id: 11, en: "mother", jp: "母", ex: "A mother nearby says, “The toy shop sells new robots like that one.”" },
+  { id: 12, en: "girl", jp: "女の子", ex: "Mina is a junior-high-school girl." },
+  { id: 13, en: "child", jp: "子供", ex: "Many children play there." },
+  { id: 14, en: "rabbit", jp: "うさぎ", ex: "She plays in a room with her rabbit, Poki." },
+  { id: 15, en: "head", jp: "頭", ex: "“This idea is mine, but the hard work is hers,” she adds, patting Poki’s head." },
+  { id: 16, en: "arm", jp: "腕", ex: "“Oh no! Its arm is broken,”" },
+  { id: 17, en: "shoe", jp: "靴", ex: "“Those shoes give me an idea,”" },
+  { id: 18, en: "bus", jp: "バス", ex: "He brings some stories from old magazines, knives, and toy buses." },
+  { id: 19, en: "ball", jp: "ボール", ex: "“That one is your ball.”" },
+  { id: 20, en: "toy", jp: "おもちゃ", ex: "“Can I borrow this toy as a sample?”" },
+  { id: 21, en: "soup", jp: "スープ", ex: "To rest, Mina makes a bowl of soup." },
+  { id: 22, en: "glass", jp: "グラス", ex: "Poki brings a glass of milk." },
+  { id: 23, en: "milk", jp: "牛乳", ex: "Poki brings a glass of milk." },
+  { id: 24, en: "paper", jp: "紙", ex: "Mina cuts paper and ties it with the rope." },
+  { id: 25, en: "magazine", jp: "雑誌", ex: "He brings some stories from old magazines, knives, and toy buses." },
+  { id: 26, en: "idea", jp: "アイディア", ex: "“Those shoes give me an idea,” she says." },
+  { id: 27, en: "home", jp: "家", ex: "Back home, Mina cuts paper and ties it with the rope." },
+  { id: 28, en: "park", jp: "公園", ex: "One week later, they go to the park." },
+  { id: 29, en: "room", jp: "部屋", ex: "She plays in a room with her rabbit, Poki." },
+  { id: 30, en: "classroom", jp: "教室", ex: "She writes in the classroom papers." },
+  { id: 31, en: "week", jp: "週", ex: "Maybe come back next week." },
+  { id: 32, en: "morning", jp: "朝", ex: "It is Sunday morning." },
+  { id: 33, en: "night", jp: "夜", ex: "That night, Mina sits quietly." },
+  { id: 34, en: "again", jp: "もう一度", ex: "The next day, they visit the shop again." },
+  { id: 35, en: "there", jp: "そこ", ex: "Many children play there." },
+  { id: 36, en: "new", jp: "新しい", ex: "Now the robot has new arms." },
+  { id: 37, en: "sad", jp: "悲しい", ex: "Mina feels sad, but her rabbit has an idea." },
+  { id: 38, en: "something", jp: "何か", ex: "“My dream is to make something famous in the United States.”" },
+  { id: 39, en: "famous", jp: "有名な", ex: "“My dream is to make something famous in the United States.”" },
+  { id: 40, en: "everyone", jp: "みんな", ex: "“Everyone has two or three robots like ours!" },
+  { id: 41, en: "now", jp: "今", ex: "“It started with us, and now it belongs to them,”" },
+  { id: 42, en: "feel", jp: "感じる", ex: "Mina feels sad." },
+  { id: 43, en: "love", jp: "愛", ex: "They feel much love in their hearts." },
+  { id: 44, en: "always", jp: "いつも", ex: "You always help me." },
+  { id: 45, en: "mine", jp: "私の", ex: "“This idea is mine, but the hard work is hers,”" },
+  { id: 46, en: "robot", jp: "ロボット", ex: "The man watches their robot move." },
+  { id: 47, en: "sell", jp: "売る", ex: "“The toy shop sells new robots like that one.”" },
+  { id: 48, en: "visit", jp: "訪ねる", ex: "The next day, they visit the shop again." },
+  { id: 49, en: "like", jp: "~のような", ex: "“Everyone has two or three robots like ours!" },
+  { id: 50, en: "dream", jp: "夢", ex: "There is still room in her heart for new dreams." },
+  { id: 51, en: "Sunday", jp: "日曜日", ex: "It is Sunday morning." },
+  // Idioms
+  { id: 52, en: "look at ~", jp: "~を見る", ex: "They look at the toy together." },
+  { id: 53, en: "go to ~", jp: "〜へ行く", ex: "One week later, they go to a park." },
+  { id: 54, en: "come back", jp: "戻ってくる", ex: "Maybe come back next week." },
+  { id: 55, en: "next day", jp: "次の日", ex: "The next day, they visit the shop again." },
+  { id: 56, en: "a glass of~", jp: "グラス一杯の〜", ex: "Poki brings a glass of milk." },
+];
+
+export default function FlashcardApp() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [cards, setCards] = useState(vocabularyData);
+  const [isShuffled, setIsShuffled] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  // Swipe handlers for mobile
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      handleNext();
+    } else if (isRightSwipe) {
+      handlePrev();
+    }
+  };
+
+  const currentCard = cards[currentIndex];
+
+  const handleNext = () => {
+    setIsFlipped(false);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % cards.length);
+    }, 200);
+  };
+
+  const handlePrev = () => {
+    setIsFlipped(false);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
+    }, 200);
+  };
+
+  const toggleFlip = () => {
+    setIsFlipped(!isFlipped);
+  };
+
+  const playAudio = (e) => {
+    e.stopPropagation(); // Prevent card flip when clicking audio
+    const utterance = new SpeechSynthesisUtterance(currentCard.en);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9; // Slightly slower for clarity
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleShuffle = () => {
+    setIsFlipped(false);
+    setTimeout(() => {
+      if (isShuffled) {
+        // Restore original order
+        setCards(vocabularyData);
+        setCurrentIndex(0);
+      } else {
+        // Shuffle
+        const shuffled = [...vocabularyData].sort(() => Math.random() - 0.5);
+        setCards(shuffled);
+        setCurrentIndex(0);
+      }
+      setIsShuffled(!isShuffled);
+    }, 200);
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') handleNext();
+      if (e.key === 'ArrowLeft') handlePrev();
+      if (e.key === ' ' || e.key === 'Enter') toggleFlip();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cards]);
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 font-sans text-slate-800">
+      
+      {/* Header */}
+      <header className="mb-6 text-center">
+        <h1 className="text-2xl font-bold text-slate-700 flex items-center justify-center gap-2">
+          <BookOpen className="w-6 h-6 text-indigo-500" />
+          単語帳アプリ
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          {isShuffled ? 'ランダムモード' : '通常モード'} • {currentIndex + 1} / {cards.length}
+        </p>
+      </header>
+
+      {/* Main Card Area */}
+      <div 
+        className="relative w-full max-w-md aspect-[4/3] perspective-1000 group cursor-pointer"
+        onClick={toggleFlip}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <div 
+          className={`relative w-full h-full duration-500 preserve-3d transition-transform ${isFlipped ? 'rotate-y-180' : ''}`}
+        >
+          {/* Front of Card */}
+          <div className="absolute w-full h-full backface-hidden bg-white rounded-3xl shadow-xl flex flex-col items-center justify-center p-8 border-b-8 border-indigo-100">
+            <span className="absolute top-4 left-6 text-xs font-bold text-indigo-400 bg-indigo-50 px-2 py-1 rounded-full">
+              English
+            </span>
+            <h2 className="text-5xl font-bold text-indigo-600 text-center mb-6 break-words max-w-full">
+              {currentCard.en}
+            </h2>
+            <button 
+              onClick={playAudio}
+              className="p-3 bg-indigo-50 hover:bg-indigo-100 rounded-full text-indigo-500 transition-colors duration-200 mt-2"
+              aria-label="音声再生"
+            >
+              <Volume2 size={28} />
+            </button>
+            <p className="absolute bottom-4 text-xs text-slate-400 animate-pulse">
+              タップして意味を見る
+            </p>
+          </div>
+
+          {/* Back of Card */}
+          <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-slate-800 rounded-3xl shadow-xl flex flex-col items-center justify-center p-8 border-b-8 border-slate-900 text-white">
+             <span className="absolute top-4 left-6 text-xs font-bold text-indigo-300 bg-slate-700 px-2 py-1 rounded-full">
+              日本語 & 例文
+            </span>
+            <div className="flex items-center gap-3 mb-2">
+               <h3 className="text-3xl font-bold text-indigo-300">
+                {currentCard.en}
+              </h3>
+              <button 
+                onClick={playAudio}
+                className="p-2 bg-slate-700 hover:bg-slate-600 rounded-full text-indigo-300 transition-colors"
+              >
+                 <Volume2 size={18} />
+              </button>
+            </div>
+           
+            <p className="text-2xl font-bold mb-6 border-b-2 border-slate-600 pb-2 px-4">
+              {currentCard.jp}
+            </p>
+            
+            <div className="bg-slate-700/50 p-4 rounded-xl w-full">
+              <p className="text-xs text-slate-400 mb-1 font-bold tracking-wider">EXAMPLE</p>
+              <p className="text-lg italic font-medium leading-relaxed">
+                "{currentCard.ex}"
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="mt-8 flex flex-col items-center gap-4 w-full max-w-md">
+        
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-between w-full gap-4">
+          <button 
+            onClick={handlePrev}
+            className="flex-1 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 py-3 rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+          >
+            <ChevronLeft size={20} />
+            前へ
+          </button>
+          
+          <button 
+            onClick={toggleShuffle}
+            className={`p-3 rounded-xl shadow-sm border transition-all active:scale-95 ${isShuffled ? 'bg-indigo-100 border-indigo-200 text-indigo-600' : 'bg-white border-slate-200 text-slate-400 hover:text-indigo-500'}`}
+            title="シャッフル"
+          >
+            {isShuffled ? <RotateCcw size={20} /> : <Shuffle size={20} />}
+          </button>
+
+          <button 
+            onClick={handleNext}
+            className="flex-1 bg-indigo-600 text-white hover:bg-indigo-700 py-3 rounded-xl shadow-md shadow-indigo-200 flex items-center justify-center gap-2 transition-all active:scale-95"
+          >
+            次へ
+            <ChevronRight size={20} />
+          </button>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden mt-2">
+          <div 
+            className="bg-indigo-500 h-full transition-all duration-300 ease-out"
+            style={{ width: `${((currentIndex + 1) / cards.length) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+        .preserve-3d {
+          transform-style: preserve-3d;
+        }
+        .backface-hidden {
+          backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+          transform: rotateY(180deg);
+        }
+      `}} />
+    </div>
+  );
+}
